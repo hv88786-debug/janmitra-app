@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>JanMitra AI — Your Voice. Your City.</title>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0D0F;
+    --ink-soft:#5B6168;
+    --ink-faint:#9CA3AA;
+    --paper:#F7F6F3;
+    --surface:#FFFFFF;
+    --line:#EAE8E3;
+    --brand:#0B3D91;
+    --brand-deep:#0A2F70;
+    --brand-tint:#E8EEFA;
+    --accent:#FF6B1A;
+    --accent-tint:#FFF4EC;
+    --civic:var(--brand);
+    --civic-deep:var(--brand-deep);
+    --civic-tint:var(--brand-tint);
+    --amber:var(--accent);
+    --amber-tint:var(--accent-tint);
+    --red:#D64545;
+    --red-tint:#FBE9E9;
+    --blue:#2D9CDB;
+    --blue-tint:#EAF5FC;
+    --green:#1B9E5A;
+    --green-tint:#E9F7EE;
+  }
+  *{-webkit-tap-highlight-color:transparent;}
+  html,body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--ink);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .font-mono-num{ font-family:'Roboto Mono', monospace; font-weight:600; letter-spacing:-0.02em; }
+
+  /* Phone shell */
+  .device{
+    max-width:430px;
+    margin:0 auto;
+    background:var(--paper);
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+    box-shadow:0 0 60px rgba(0,0,0,0.35);
+  }
+  @media(min-width:431px){
+    body{ padding:28px 0; }
+    .device{ min-height:calc(100vh - 56px); border-radius:32px; overflow:hidden; }
+  }
+
+  .screen{
+    display:none;
+    min-height:100vh;
+    padding-bottom:96px;
+    animation:screenIn .28s cubic-bezier(.22,.61,.36,1);
+  }
+  .screen.active{ display:block; }
+  @keyframes screenIn{
+    from{ opacity:0; transform:translateY(8px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .screen{ animation:none; }
+  }
+
+  /* Bottom nav */
+  .bottom-nav{
+    position:absolute;
+    bottom:0; left:0; right:0;
+    background:rgba(255,255,255,0.98);
+    backdrop-filter:blur(8px);
+    border-top:1px solid var(--line);
+    display:flex;
+    align-items:stretch;
+    height:64px;
+    padding-bottom:env(safe-area-inset-bottom);
+    z-index:40;
+  }
+  .nav-item{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    color:var(--ink-faint);
+    transition:color .15s ease;
+    position:relative;
+    background:none;
+    border:none;
+  }
+  .nav-item.active{ color:var(--civic); }
+  .nav-item .nav-label{ font-size:11px; font-weight:600; }
+  .nav-item .nav-dot{
+    position:absolute; top:6px; right:28%;
+    width:7px; height:7px; border-radius:50%;
+    background:var(--red); display:none;
+  }
+  .nav-item.has-alert .nav-dot{ display:block; }
+
+  .nav-fab-wrap{ flex:1; display:flex; align-items:center; justify-content:center; }
+  .nav-fab{
+    width:52px; height:52px; border-radius:16px;
+    background:var(--civic);
+    display:flex; align-items:center; justify-content:center;
+    color:white;
+    box-shadow:0 8px 16px -4px rgba(11,61,145,0.40);
+    transform:translateY(-14px);
+    transition:transform .15s ease, box-shadow .15s ease;
+    border:none;
+  }
+  .nav-fab:active{ transform:translateY(-14px) scale(0.92); }
+
+  /* Top bar */
+  .topbar{
+    position:sticky; top:0; z-index:30;
+    background:var(--paper);
+    padding:18px 18px 14px;
+  }
+  .topbar.solid{ background:var(--surface); border-bottom:1px solid var(--line); }
+
+  /* Cards */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:18px;
+  }
+  .card-tap{ transition:transform .12s ease, box-shadow .12s ease; }
+  .card-tap:active{ transform:scale(0.985); }
+
+  .shadow-soft{ box-shadow:0 2px 10px -2px rgba(11,13,15,0.06), 0 1px 2px rgba(11,13,15,0.04); }
+  .shadow-pop{ box-shadow:0 10px 24px -8px rgba(11,13,15,0.14); }
+
+  /* Status pills */
+  .pill{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:11.5px; font-weight:700;
+    padding:5px 10px; border-radius:999px;
+    letter-spacing:0.01em;
+  }
+  .pill-dot{ width:6px; height:6px; border-radius:50%; }
+  .pill-pending{ background:var(--amber-tint); color:#B85A1A; }
+  .pill-pending .pill-dot{ background:var(--amber); }
+  .pill-progress{ background:var(--blue-tint); color:#1A6FA3; }
+  .pill-progress .pill-dot{ background:var(--blue); }
+  .pill-resolved{ background:var(--green-tint); color:#137A41; }
+  .pill-resolved .pill-dot{ background:var(--green); }
+
+  /* Priority badge */
+  .priority-badge{
+    display:inline-flex; align-items:center; gap:6px;
+    border-radius:12px; padding:8px 12px;
+    font-size:12.5px; font-weight:700;
+  }
+
+  /* Track stepper for issue detail */
+  .track{ display:flex; flex-direction:column; }
+  .track-row{ display:flex; gap:12px; }
+  .track-line-wrap{ display:flex; flex-direction:column; align-items:center; width:20px; }
+  .track-node{
+    width:20px; height:20px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    background:var(--line); color:transparent;
+  }
+  .track-node.done{ background:var(--civic); color:white; }
+  .track-node.current{ background:var(--amber); color:white; box-shadow:0 0 0 4px var(--amber-tint); }
+  .track-bar{ width:2px; flex:1; background:var(--line); min-height:28px; }
+  .track-bar.done{ background:var(--civic); }
+
+  /* Inputs */
+  .field-input{
+    width:100%;
+    background:var(--surface);
+    border:1.5px solid var(--line);
+    border-radius:14px;
+    padding:13px 14px;
+    font-size:14.5px;
+    color:var(--ink);
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .field-input:focus{
+    outline:none;
+    border-color:var(--civic);
+    box-shadow:0 0 0 3px var(--civic-tint);
+  }
+  .field-input::placeholder{ color:var(--ink-faint); }
+
+  /* Category chip */
+  .cat-chip{
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    padding:14px 8px;
+    border-radius:16px;
+    border:1.5px solid var(--line);
+    background:var(--surface);
+    transition:all .15s ease;
+  }
+  .cat-chip.selected{
+    border-color:var(--civic);
+    background:var(--civic-tint);
+  }
+  .cat-chip .cat-icon-wrap{
+    width:40px; height:40px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--paper);
+  }
+  .cat-chip.selected .cat-icon-wrap{ background:white; }
+
+  /* Buttons */
+  .btn-primary{
+    background:var(--civic);
+    color:white;
+    font-weight:700;
+    border-radius:14px;
+    transition:transform .12s ease, background .15s ease;
+  }
+  .btn-primary:active{ transform:scale(0.97); background:var(--civic-deep); }
+  .btn-primary:disabled{ background:var(--ink-faint); }
+  .btn-cta{
+    background:linear-gradient(135deg,var(--accent) 0%, #E85A0E 100%);
+    color:#fff; font-weight:800; border-radius:16px; border:none;
+    box-shadow:0 10px 22px -6px rgba(255,107,26,0.55);
+    transition:transform .15s ease;
+  }
+  .btn-cta:active{ transform:scale(0.97); }
+  .btn-cta:disabled{ background:var(--ink-faint); box-shadow:none; }
+
+  .btn-ghost{
+    background:var(--surface);
+    border:1.5px solid var(--line);
+    border-radius:14px;
+    font-weight:600;
+    transition:transform .12s ease;
+  }
+  .btn-ghost:active{ transform:scale(0.97); }
+
+  /* Quick action tile */
+  .qa-tile{
+    display:flex; flex-direction:column; align-items:flex-start; gap:10px;
+    padding:14px;
+    border-radius:18px;
+    transition:transform .12s ease;
+  }
+  .qa-tile:active{ transform:scale(0.96); }
+
+  /* Mic pulse */
+  .mic-pulse{
+    position:relative;
+  }
+  .mic-pulse::before{
+    content:'';
+    position:absolute; inset:0;
+    border-radius:50%;
+    background:var(--red);
+    opacity:0.25;
+    animation:pulseRing 1.6s ease-out infinite;
+  }
+  @keyframes pulseRing{
+    0%{ transform:scale(1); opacity:0.35; }
+    100%{ transform:scale(1.9); opacity:0; }
+  }
+
+  /* Voice wave (listening indicator) */
+  .voice-wave{ display:inline-flex; align-items:center; gap:2.5px; height:18px; }
+  .voice-wave span{
+    width:3px; border-radius:2px; background:var(--red);
+    animation:waveBar 0.9s ease-in-out infinite;
+  }
+  .voice-wave span:nth-child(1){ height:6px; animation-delay:0s; }
+  .voice-wave span:nth-child(2){ height:14px; animation-delay:.15s; }
+  .voice-wave span:nth-child(3){ height:9px; animation-delay:.3s; }
+  .voice-wave span:nth-child(4){ height:16px; animation-delay:.45s; }
+  @keyframes waveBar{
+    0%,100%{ transform:scaleY(0.4); }
+    50%{ transform:scaleY(1); }
+  }
+
+  /* Skeleton shimmer */
+  .skel{
+    background:linear-gradient(90deg, var(--line) 25%, #F3F1EC 37%, var(--line) 63%);
+    background-size:400% 100%;
+    animation:shimmer 1.4s ease infinite;
+    border-radius:8px;
+  }
+  @keyframes shimmer{ 0%{background-position:100% 50%;} 100%{background-position:0 50%;} }
+
+  /* Toast */
+  #toast{
+    position:absolute; bottom:84px; left:18px; right:18px;
+    z-index:60;
+    transform:translateY(20px); opacity:0;
+    pointer-events:none;
+    transition:transform .25s cubic-bezier(.22,.61,.36,1), opacity .25s ease;
+  }
+  #toast.show{ transform:translateY(0); opacity:1; }
+
+  /* Switch toggle */
+  .switch{
+    width:46px; height:27px; border-radius:999px;
+    background:var(--line);
+    position:relative;
+    transition:background .2s ease;
+    flex-shrink:0;
+  }
+  .switch.on{ background:var(--civic); }
+  .switch-knob{
+    position:absolute; top:3px; left:3px;
+    width:21px; height:21px; border-radius:50%;
+    background:white;
+    box-shadow:0 1px 3px rgba(0,0,0,0.25);
+    transition:transform .2s cubic-bezier(.34,1.56,.64,1);
+  }
+  .switch.on .switch-knob{ transform:translateX(19px); }
+
+  /* dark mode preview tile only (visual, not functional theme swap) */
+  .scroll-x::-webkit-scrollbar{ display:none; }
+  .scroll-x{ scrollbar-width:none; }
+
+  textarea.field-input{ resize:none; }
+
+  .filter-chip{
+    background:var(--surface);
+    border:1.5px solid var(--line);
+    color:var(--ink-soft);
+  }
+  .filter-chip.active{
+    background:var(--civic);
+    border-color:var(--civic);
+    color:white;
+  }
+  .filter-chip.active span{ opacity:0.85; }
+
+  .map-bg{
+    background-color:#E8EDE9;
+    background-image:
+      linear-gradient(rgba(11,61,145,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(11,61,145,0.06) 1px, transparent 1px);
+    background-size:24px 24px;
+  }
+
+  /* ============================================================
+     UTILITY LAYER — hand-written replacement for Tailwind.
+     No CDN/build-step dependency: works the instant the HTML
+     loads, offline-safe, never fails to compile a class.
+     ============================================================ */
+
+  /* Box model resets */
+  *, *::before, *::after{ box-sizing:border-box; }
+  img{ display:block; max-width:100%; }
+  button{ font-family:inherit; cursor:pointer; }
+
+  /* Display */
+  .flex{ display:flex; }
+  .grid{ display:grid; }
+  .hidden{ display:none; }
+  .grid-cols-3{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+
+  /* Flex */
+  .flex-1{ flex:1 1 0%; }
+  .flex-col{ flex-direction:column; }
+  .flex-shrink-0{ flex-shrink:0; }
+  .items-center{ align-items:center; }
+  .items-start{ align-items:flex-start; }
+  .justify-center{ justify-content:center; }
+  .justify-between{ justify-content:space-between; }
+
+  /* Position */
+  .relative{ position:relative; }
+  .absolute{ position:absolute; }
+  .fixed{ position:fixed; }
+  .inset-0{ top:0; right:0; bottom:0; left:0; }
+  .top-2{ top:0.5rem; }
+  .top-2\.5{ top:0.625rem; }
+  .right-0{ right:0; }
+  .right-2{ right:0.5rem; }
+  .right-2\.5{ right:0.625rem; }
+  .right-3{ right:0.75rem; }
+  .bottom-0{ bottom:0; }
+  .bottom-2\.5{ bottom:0.625rem; }
+  .bottom-3{ bottom:0.75rem; }
+  .left-0{ left:0; }
+  .left-2\.5{ left:0.625rem; }
+  .z-50{ z-index:50; }
+
+  /* Sizing — fixed scale (w/h-N) */
+  .w-3{ width:0.75rem; } .h-3{ height:0.75rem; }
+  .w-3\.5{ width:0.875rem; } .h-3\.5{ height:0.875rem; }
+  .w-4{ width:1rem; } .h-4{ height:1rem; }
+  .w-5{ width:1.25rem; } .h-5{ height:1.25rem; }
+  .w-6{ width:1.5rem; } .h-6{ height:1.5rem; }
+  .w-7{ width:1.75rem; } .h-7{ height:1.75rem; }
+  .w-8{ width:2rem; } .h-8{ height:2rem; }
+  .w-9{ width:2.25rem; } .h-9{ height:2.25rem; }
+  .w-10{ width:2.5rem; } .h-10{ height:2.5rem; }
+  .w-11{ width:2.75rem; } .h-11{ height:2.75rem; }
+  .w-12{ width:3rem; } .h-12{ height:3rem; }
+  .w-14{ width:3.5rem; } .h-14{ height:3.5rem; }
+  .h-1{ height:0.25rem; }
+  .h-28{ height:7rem; }
+  .h-40{ height:10rem; }
+  .h-48{ height:12rem; }
+  .h-full{ height:100%; }
+  .w-full{ width:100%; }
+
+  /* Sizing — arbitrary px (icon sizes) */
+  .w-\[16px\]{ width:16px; } .h-\[16px\]{ height:16px; }
+  .w-\[18px\]{ width:18px; } .h-\[18px\]{ height:18px; }
+  .w-\[21px\]{ width:21px; } .h-\[21px\]{ height:21px; }
+
+  /* Spacing — margin */
+  .mt-0\.5{ margin-top:0.125rem; }
+  .mt-1{ margin-top:0.25rem; }
+  .mt-1\.5{ margin-top:0.375rem; }
+  .mt-2{ margin-top:0.5rem; }
+  .mt-2\.5{ margin-top:0.625rem; }
+  .mt-3{ margin-top:0.75rem; }
+  .mt-3\.5{ margin-top:0.875rem; }
+  .mt-4{ margin-top:1rem; }
+  .mt-5{ margin-top:1.25rem; }
+  .mt-6{ margin-top:1.5rem; }
+  .-mt-1{ margin-top:-0.25rem; }
+  .-mt-2{ margin-top:-0.5rem; }
+  .mb-2{ margin-bottom:0.5rem; }
+  .mb-2\.5{ margin-bottom:0.625rem; }
+  .mb-3{ margin-bottom:0.75rem; }
+  .mb-4{ margin-bottom:1rem; }
+  .mb-5{ margin-bottom:1.25rem; }
+  .mx-auto{ margin-left:auto; margin-right:auto; }
+
+  /* Spacing — padding */
+  .p-3{ padding:0.75rem; }
+  .p-3\.5{ padding:0.875rem; }
+  .p-4{ padding:1rem; }
+  .p-6{ padding:1.5rem; }
+  .px-1{ padding-left:0.25rem; padding-right:0.25rem; }
+  .px-2\.5{ padding-left:0.625rem; padding-right:0.625rem; }
+  .px-3{ padding-left:0.75rem; padding-right:0.75rem; }
+  .px-3\.5{ padding-left:0.875rem; padding-right:0.875rem; }
+  .px-\[18px\]{ padding-left:18px; padding-right:18px; }
+  .py-1{ padding-top:0.25rem; padding-bottom:0.25rem; }
+  .py-1\.5{ padding-top:0.375rem; padding-bottom:0.375rem; }
+  .py-3\.5{ padding-top:0.875rem; padding-bottom:0.875rem; }
+  .py-4{ padding-top:1rem; padding-bottom:1rem; }
+  .py-7{ padding-top:1.75rem; padding-bottom:1.75rem; }
+  .pl-2\.5{ padding-left:0.625rem; }
+  .pr-3{ padding-right:0.75rem; }
+  .pb-1{ padding-bottom:0.25rem; }
+  .pb-2{ padding-bottom:0.5rem; }
+
+  /* Gap */
+  .gap-1{ gap:0.25rem; }
+  .gap-1\.5{ gap:0.375rem; }
+  .gap-2{ gap:0.5rem; }
+  .gap-2\.5{ gap:0.625rem; }
+  .gap-3{ gap:0.75rem; }
+  .gap-3\.5{ gap:0.875rem; }
+
+  /* space-y / space-x (stack spacing via sibling margin) */
+  .space-y-2\.5 > * + *{ margin-top:0.625rem; }
+  .space-y-3 > * + *{ margin-top:0.75rem; }
+  .space-y-5 > * + *{ margin-top:1.25rem; }
+
+  /* divide */
+  .divide-y > * + *{ border-top:1px solid; border-top-color:inherit; }
+  .divide-\[var\(--line\)\] > * + *{ border-top-color:var(--line); }
+
+  /* Typography */
+  .text-\[10\.5px\]{ font-size:10.5px; }
+  .text-\[11px\]{ font-size:11px; }
+  .text-\[11\.5px\]{ font-size:11.5px; }
+  .text-\[12px\]{ font-size:12px; }
+  .text-\[12\.5px\]{ font-size:12.5px; }
+  .text-\[13px\]{ font-size:13px; }
+  .text-\[13\.5px\]{ font-size:13.5px; }
+  .text-\[14px\]{ font-size:14px; }
+  .text-\[15px\]{ font-size:15px; }
+  .text-\[15\.5px\]{ font-size:15.5px; }
+  .text-\[16px\]{ font-size:16px; }
+  .text-\[17px\]{ font-size:17px; }
+  .text-\[18px\]{ font-size:18px; }
+  .text-\[19px\]{ font-size:19px; }
+  .text-\[20px\]{ font-size:20px; }
+  .text-\[22px\]{ font-size:22px; }
+  .font-medium{ font-weight:500; }
+  .font-semibold{ font-weight:600; }
+  .font-bold{ font-weight:700; }
+  .font-extrabold{ font-weight:800; }
+  .leading-none{ line-height:1; }
+  .leading-tight{ line-height:1.25; }
+  .leading-snug{ line-height:1.375; }
+  .leading-relaxed{ line-height:1.625; }
+  .tracking-tight{ letter-spacing:-0.02em; }
+  .tracking-wide{ letter-spacing:0.025em; }
+  .uppercase{ text-transform:uppercase; }
+  .text-center{ text-align:center; }
+  .text-left{ text-align:left; }
+  .text-right{ text-align:right; }
+  .whitespace-nowrap{ white-space:nowrap; }
+  .truncate{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* Colors (text / bg using CSS vars + literal) */
+  .text-white{ color:#fff; }
+  .text-white\/75{ color:rgba(255,255,255,0.75); }
+  .text-\[var\(--ink-faint\)\]{ color:var(--ink-faint); }
+  .bg-white{ background-color:#fff; }
+  .bg-white\/15{ background-color:rgba(255,255,255,0.15); }
+  .bg-black\/40{ background-color:rgba(0,0,0,0.40); }
+  .bg-black\/55{ background-color:rgba(0,0,0,0.55); }
+  .bg-\[var\(--paper\)\]{ background-color:var(--paper); }
+  .bg-\[var\(--line\)\]{ background-color:var(--line); }
+  .opacity-60{ opacity:0.6; }
+
+  /* Borders */
+  .border{ border-width:1px; border-style:solid; }
+  .border-2{ border-width:2px; border-style:solid; }
+  .border-dashed{ border-style:dashed; }
+  .border-\[var\(--line\)\]{ border-color:var(--line); }
+
+  /* Border radius — arbitrary */
+  .rounded-\[10px\]{ border-radius:10px; }
+  .rounded-\[12px\]{ border-radius:12px; }
+  .rounded-\[16px\]{ border-radius:16px; }
+  .rounded-\[18px\]{ border-radius:18px; }
+  .rounded-full{ border-radius:9999px; }
+  .rounded-t-\[24px\]{ border-top-left-radius:24px; border-top-right-radius:24px; }
+
+  /* Overflow */
+  .overflow-hidden{ overflow:hidden; }
+  .overflow-x-auto{ overflow-x:auto; }
+  .overflow-y-auto{ overflow-y:auto; }
+  .object-cover{ object-fit:cover; }
+  .max-h-\[80vh\]{ max-height:80vh; }
+
+  /* Misc */
+  .cursor-pointer{ cursor:pointer; }
+  .grid-cols-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+
+  /* Brand mark */
+  .jm-logo{ flex-shrink:0; }
+  .jm-wordmark{ font-weight:800; letter-spacing:-0.02em; }
+  .jm-wordmark .jm-jan{ color:var(--brand); }
+  .jm-wordmark .jm-mitra{ color:var(--accent); }
+
+  /* Hero */
+  .hero-band{
+    background:linear-gradient(135deg,var(--brand) 0%, var(--brand-deep) 100%);
+    border-radius:0 0 26px 26px;
+    padding:16px 18px 20px;
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-band::after{
+    content:'';
+    position:absolute; right:-40px; top:-40px;
+    width:160px; height:160px; border-radius:50%;
+    background:rgba(255,255,255,0.06);
+  }
+  .hero-stat{
+    background:rgba(255,255,255,0.10);
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:14px;
+    padding:10px 8px;
+    text-align:center;
+  }
+  .hero-stat .v{ font-size:18px; font-weight:800; font-family:'Roboto Mono',monospace; line-height:1; }
+  .hero-stat .l{ font-size:10.5px; font-weight:600; opacity:.8; margin-top:3px; }
+
+  .qa-tile-2{
+    display:flex; flex-direction:column; gap:8px;
+    padding:14px; border-radius:16px;
+    text-align:left;
+  }
+  .qa-tile-2:active{ transform:scale(0.97); }
+
+  .priority-banner{
+    background:var(--accent-tint);
+    border:1px solid #FFD9BC;
+    border-radius:16px;
+    padding:12px 14px;
+    display:flex; align-items:center; gap:10px;
+  }
+
+  .community-item{
+    display:flex; gap:10px; align-items:flex-start;
+    padding:12px; border-radius:14px;
+    background:#fff; border:1px solid var(--line);
+  }
+
+  /* ============ COMMUNITY VERIFICATION ============ */
+  .upvote-btn{
+    display:flex; align-items:center; gap:6px;
+    padding:7px 12px;
+    border-radius:12px;
+    border:1.5px solid var(--line);
+    background:var(--paper);
+    font-weight:700;
+    font-size:12px;
+    color:var(--ink-soft);
+    transition:transform .15s ease, background .15s ease, border-color .15s ease, color .15s ease;
+    flex-shrink:0;
+  }
+  .upvote-btn .upvote-icon{ transition:transform .35s cubic-bezier(.34,1.56,.64,1); }
+  .upvote-btn.voted{
+    background:var(--civic-tint);
+    border-color:var(--civic);
+    color:var(--civic);
+  }
+  .upvote-btn.voted .upvote-icon{ color:var(--civic); transform:translateY(-1px); }
+  .upvote-btn:active{ transform:scale(0.94); }
+  .upvote-btn.pulse .upvote-icon{ animation:upvotePop .45s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes upvotePop{
+    0%{ transform:scale(1); }
+    35%{ transform:scale(1.5) translateY(-3px); }
+    65%{ transform:scale(0.85); }
+    100%{ transform:scale(1); }
+  }
+  .upvote-burst{
+    position:absolute; inset:0; pointer-events:none;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .upvote-burst span{
+    position:absolute;
+    width:5px; height:5px; border-radius:50%;
+    background:var(--civic);
+    opacity:0;
+  }
+  .upvote-btn.pulse .upvote-burst span{ animation:burstFly .5s ease-out forwards; }
+  .upvote-burst span:nth-child(1){ --tx:-14px; --ty:-10px; animation-delay:0s; }
+  .upvote-burst span:nth-child(2){ --tx:14px;  --ty:-10px; animation-delay:.02s; }
+  .upvote-burst span:nth-child(3){ --tx:-16px; --ty:4px;  animation-delay:.04s; }
+  .upvote-burst span:nth-child(4){ --tx:16px;  --ty:4px;  animation-delay:.06s; }
+  .upvote-burst span:nth-child(5){ --tx:0px;   --ty:-16px; animation-delay:.08s; }
+  @keyframes burstFly{
+    0%{ opacity:1; transform:translate(0,0) scale(1); }
+    100%{ opacity:0; transform:translate(var(--tx),var(--ty)) scale(0.3); }
+  }
+
+  .citizens-count{
+    display:flex; align-items:center; gap:5px;
+    font-size:11.5px; font-weight:600;
+    color:var(--ink-faint);
+  }
+  .citizens-count .count-num{
+    font-family:'Roboto Mono', monospace;
+    font-weight:700;
+    color:var(--ink-soft);
+  }
+
+  .hotspot-badge{
+    display:inline-flex; align-items:center; gap:3px;
+    font-size:10px; font-weight:800;
+    padding:3px 7px; border-radius:999px;
+    background:linear-gradient(135deg,#FF6B1A,#D6420C);
+    color:#fff;
+    letter-spacing:0.01em;
+    box-shadow:0 2px 8px -2px rgba(214,66,12,0.55);
+  }
+  .hotspot-pin{
+    position:relative;
+  }
+  .hotspot-pin::after{
+    content:'';
+    position:absolute; inset:-5px;
+    border-radius:50%;
+    background:#FF6B1A;
+    opacity:0.30;
+    animation:hotspotRing 1.8s ease-out infinite;
+    z-index:-1;
+  }
+  @keyframes hotspotRing{
+    0%{ transform:scale(0.8); opacity:0.35; }
+    100%{ transform:scale(1.9); opacity:0; }
+  }
+
+  .priority-flip{ display:inline-block; }
+  .priority-flip.flip{ animation:priorityFlip .5s ease; }
+  @keyframes priorityFlip{
+    0%{ transform:rotateX(0); }
+    50%{ transform:rotateX(90deg); opacity:0.3; }
+    100%{ transform:rotateX(0); opacity:1; }
+  }
+/* ============================================================
+   JANMITRA AI — 9:16 MOBILE OPTIMISATION PATCH
+   Applied on top of existing styles. No branding changes.
+   ============================================================ */
+
+/* ── SCREEN: fill viewport, no scroll on home ── */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.device {
+  max-width: 430px;
+  height: 100vh;
+  height: 100dvh;
+  min-height: unset;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+@media (min-width: 431px) {
+  body { padding: 0; background: var(--paper); display: flex; align-items: flex-start; justify-content: center; min-height: 100vh; }
+  .device { height: 100vh; width: 430px; border-radius: 0; box-shadow: none; }
+}
+
+/* ── SCREEN: each screen is a flex column, scrollable content ── */
+.screen {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  min-height: unset;
+  padding-bottom: 0;
+  animation: screenIn .22s cubic-bezier(.22,.61,.36,1);
+  overflow: hidden;
+}
+.screen.active {
+  display: flex;
+}
+
+/* ── SCROLLABLE BODY inside each screen ── */
+.screen-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+.screen-body::-webkit-scrollbar { display: none; }
+
+/* ── HERO BAND: tighter on small screens ── */
+.hero-band {
+  padding: 12px 16px 16px;
+  border-radius: 0 0 24px 24px;
+  flex-shrink: 0;
+}
+.hero-band .grid { margin-top: 10px; gap: 8px; }
+.hero-stat .v { font-size: 16px; }
+.hero-stat { padding: 8px 6px; }
+
+/* ── HOME: location pill tighter ── */
+.hero-band button.mt-3 { margin-top: 8px; }
+
+/* ── BOTTOM NAV: fixed inside device, safe-area aware ── */
+.bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 56px;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(255,255,255,0.98);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  z-index: 40;
+  flex-shrink: 0;
+}
+.nav-fab { transform: translateY(-10px); width: 48px; height: 48px; border-radius: 14px; }
+.nav-fab:active { transform: translateY(-10px) scale(0.92); }
+.nav-label { font-size: 10px; }
+.nav-item { gap: 2px; }
+
+/* ── TOP BAR: compact ── */
+.topbar {
+  padding: 12px 16px 10px;
+  flex-shrink: 0;
+}
+
+/* ── QUICK ACTIONS: 2x2 grid, equal-height tiles ── */
+.qa-tile-2 {
+  padding: 12px;
+  gap: 7px;
+  min-height: 84px;
+}
+.qa-tile-2 .w-9 { width: 34px; height: 34px; }
+
+/* ── HOME CONTENT: tighter gaps ── */
+#screen-home .priority-banner { padding: 10px 12px; }
+#screen-home .priority-banner .w-9 { width: 32px; height: 32px; }
+
+/* ── AI BANNER on home: more compact ── */
+#screen-home .rounded-\[18px\].p-4 { padding: 10px 12px; }
+#screen-home .rounded-\[18px\] .w-11 { width: 38px; height: 38px; }
+
+/* ── RECENT COMPLAINTS: compact ── */
+#home-recent-list .card { padding: 10px 12px; }
+#home-recent-list .w-11 { width: 38px; height: 38px; }
+
+/* ── REPORT SCREEN: collapsible sections, less spacing ── */
+#screen-report .screen-body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+
+.report-section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.report-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.report-section-header .sec-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.report-section-body {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--line);
+}
+.report-section.collapsed .report-section-body { display: none; }
+.report-section.collapsed .sec-chevron { transform: rotate(-90deg); }
+.sec-chevron { transition: transform .2s ease; flex-shrink: 0; }
+.sec-done-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 8px; border-radius: 999px;
+  background: var(--green-tint); color: #137A41;
+}
+
+/* ── PHOTO UPLOAD: smaller drop zone ── */
+#photo-drop { padding: 20px 14px; gap: 6px; }
+#photo-drop .w-12 { width: 40px; height: 40px; }
+#photo-preview { height: 120px; }
+
+/* ── CATEGORY GRID: 3 cols, tighter ── */
+.cat-chip { padding: 10px 6px; gap: 5px; }
+.cat-chip .cat-icon-wrap { width: 34px; height: 34px; border-radius: 10px; }
+#category-grid .text-\[11px\] { font-size: 10.5px; }
+
+/* ── VOICE CARD: compact ── */
+#screen-report .card.p-4.flex.items-center { padding: 10px 12px; }
+#screen-report #mic-btn { width: 40px; height: 40px; }
+
+/* ── DESCRIPTION: fewer rows ── */
+#desc-field { rows: 3; min-height: 72px; max-height: 96px; resize: none; }
+
+/* ── LOCATION MAP: shorter ── */
+#screen-report .map-bg.h-28 { height: 80px; }
+
+/* ── SUBMIT BUTTON: sticky at bottom ── */
+.submit-sticky {
+  position: sticky;
+  bottom: 0;
+  background: var(--paper);
+  padding: 10px 18px calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  margin-top: auto;
+  flex-shrink: 0;
+}
+#submit-btn { margin: 0; padding: 14px; font-size: 14px; }
+
+/* ── MY ISSUES: compact cards ── */
+.issue-card-compact {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform .12s ease;
+}
+.issue-card-compact:active { transform: scale(0.985); }
+.issue-card-compact .card-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+.issue-card-compact .card-thumb {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.issue-card-compact .card-meta { flex: 1; min-width: 0; }
+.issue-card-compact .card-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.issue-card-compact .card-sub { font-size: 11px; color: var(--ink-faint); margin-top: 2px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.issue-card-compact .card-expand { width: 28px; height: 28px; border-radius: 50%; background: var(--paper); display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; flex-shrink: 0; }
+.issue-card-compact .card-expand-icon { transition: transform .2s ease; }
+.issue-card-compact.expanded .card-expand-icon { transform: rotate(180deg); }
+.issue-card-compact .card-detail { display: none; padding: 0 12px 12px; border-top: 1px solid var(--line); }
+.issue-card-compact.expanded .card-detail { display: block; }
+
+/* ── ALERTS: compact ── */
+#alerts-list .community-item { padding: 10px; }
+#alerts-list .w-9 { width: 34px; height: 34px; }
+
+/* ── PROFILE: tighter ── */
+#screen-profile .mt-3 { margin-top: 10px; }
+#screen-profile .mt-6 { margin-top: 16px; }
+
+/* ── NEARBY SCREEN: map shorter ── */
+#screen-nearby .h-48 { height: 160px; }
+
+/* ── SCREEN SLIDE ANIMATION ── */
+@keyframes screenIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── SPACING UTILITIES (overrides for compactness) ── */
+.space-y-2\.5 > * + * { margin-top: 8px; }
+.space-y-3 > * + * { margin-top: 10px; }
+.space-y-5 > * + * { margin-top: 14px; }
+
+.px-\[18px\] { padding-left: 16px; padding-right: 16px; }
+
+/* ── TOAST: above bottom nav ── */
+#toast { bottom: 68px; left: 14px; right: 14px; }
+
+</style>
+</head>
+<body>
+
+<div class="device" id="device">
+
+  <!-- ============ HOME SCREEN ============ -->
+  <section class="screen active" id="screen-home">
+    <header class="hero-band">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg class="jm-logo" width="34" height="34" viewBox="0 0 64 64" fill="none">
+            <path d="M32 4C17 4 6 14.5 6 27.5c0 8 4.2 14.8 10.8 19L14 58l13.4-6.6c1.5.2 3 .3 4.6.3 15 0 26-10.5 26-23.5S47 4 32 4Z" fill="#fff" opacity="0.18"/>
+            <path d="M32 6C18.2 6 8 15.6 8 27.5c0 7.4 3.9 13.7 10.1 17.5l-2.4 9.7 11.2-5.5c1.7.3 3.4.4 5.1.4 13.8 0 24-9.6 24-21.6S45.8 6 32 6Z" fill="#fff"/>
+            <path d="M32 16c-6 0-10.5 4.6-10.5 10 0 3.6 2 6.8 5.1 8.7L32 46l5.4-11.3c3.1-1.9 5.1-5.1 5.1-8.7 0-5.4-4.5-10-10.5-10Z" fill="var(--accent)"/>
+            <circle cx="32" cy="26" r="3.6" fill="#fff"/>
+          </svg>
+          <div>
+            <p class="text-[13px] text-white/75 font-medium" id="home-greeting">Good Evening</p>
+            <h1 class="text-[20px] font-extrabold tracking-tight text-white">Harish 👋</h1>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center" onclick="goTo('alerts')">
+            <i data-lucide="bell" class="w-[18px] h-[18px] text-white"></i>
+          </button>
+          <button class="w-10 h-10 rounded-full bg-white flex items-center justify-center" onclick="goTo('profile')">
+            <span class="text-[14px] font-extrabold" style="color:var(--brand)">H</span>
+          </button>
+        </div>
+      </div>
+
+      <button class="mt-3 flex items-center gap-1.5 bg-white/12 border border-white/15 rounded-full pl-2.5 pr-3 py-1.5">
+        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-white"></i>
+        <span class="text-[12.5px] font-semibold text-white">Ajmer, Rajasthan</span>
+        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-white/70"></i>
+      </button>
+
+      <div class="grid grid-cols-3 gap-2.5 mt-4">
+        <div class="hero-stat"><p class="v">3</p><p class="l">Active</p></div>
+        <div class="hero-stat"><p class="v">2</p><p class="l">Resolved</p></div>
+        <div class="hero-stat"><p class="v" style="color:var(--accent)">1</p><p class="l">High Priority</p></div>
+      </div>
+    </header>
+    <div class="screen-body">
+    <div class="px-[18px] mt-4">
+
+      <!-- Nearby high priority banner -->
+      <div class="priority-banner">
+        <div class="w-9 h-9 rounded-[10px] flex items-center justify-center flex-shrink-0" style="background:var(--accent)">
+          <i data-lucide="alert-triangle" class="w-[18px] h-[18px] text-white"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-[12.5px] font-bold">1 high priority issue near you</p>
+          <p class="text-[11.5px] text-[var(--ink-faint)] mt-0.5">Open drain reported 400m away — flagged by AI</p>
+        </div>
+        <i data-lucide="chevron-right" class="w-4 h-4 text-[var(--ink-faint)] flex-shrink-0"></i>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="mt-5">
+        <h2 class="text-[14px] font-bold mb-2.5">Quick actions</h2>
+        <div class="grid grid-cols-2 gap-2.5">
+          <button class="qa-tile-2 card shadow-soft" onclick="goTo('report')">
+            <div class="w-9 h-9 rounded-[10px] flex items-center justify-center" style="background:var(--brand-tint)">
+              <i data-lucide="camera" class="w-[18px] h-[18px]" style="color:var(--brand)"></i>
+            </div>
+            <span class="text-[12.5px] font-bold leading-tight">Report Issue</span>
+          </button>
+          <button class="qa-tile-2 card shadow-soft" onclick="goTo('report'); setTimeout(()=>startVoiceDemo(),300)">
+            <div class="w-9 h-9 rounded-[10px] flex items-center justify-center" style="background:var(--red-tint)">
+              <i data-lucide="mic" class="w-[18px] h-[18px]" style="color:var(--red)"></i>
+            </div>
+            <span class="text-[12.5px] font-bold leading-tight">Voice Complaint</span>
+          </button>
+          <button class="qa-tile-2 card shadow-soft" onclick="goTo('nearby')">
+            <div class="w-9 h-9 rounded-[10px] flex items-center justify-center" style="background:var(--accent-tint)">
+              <i data-lucide="map-pinned" class="w-[18px] h-[18px]" style="color:var(--accent)"></i>
+            </div>
+            <span class="text-[12.5px] font-bold leading-tight">Nearby Problems</span>
+          </button>
+          <button class="qa-tile-2 card shadow-soft" onclick="goTo('issues')">
+            <div class="w-9 h-9 rounded-[10px] flex items-center justify-center" style="background:var(--green-tint)">
+              <i data-lucide="list-checks" class="w-[18px] h-[18px]" style="color:var(--green)"></i>
+            </div>
+            <span class="text-[12.5px] font-bold leading-tight">Track Complaint</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Banner -->
+      <div class="mt-5 rounded-[18px] p-4 flex items-center gap-3 shadow-soft" style="background:var(--brand)">
+        <div class="w-11 h-11 rounded-[12px] bg-white/15 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-white text-[13px] font-bold">AI Priority Detection</p>
+          <p class="text-white/75 text-[11.5px] mt-0.5 leading-tight">Reports are auto-ranked so urgent ones reach officials faster.</p>
+        </div>
+      </div>
+
+      <!-- Recent complaints -->
+      <div class="mt-6 flex items-center justify-between">
+        <h2 class="text-[14px] font-bold">Recent complaints</h2>
+        <button class="text-[12.5px] font-bold" style="color:var(--brand)" onclick="goTo('issues')">View all</button>
+      </div>
+
+      <div class="mt-3 space-y-2.5" id="home-recent-list"></div>
+
+      <!-- Community updates -->
+      <div class="mt-6 flex items-center justify-between">
+        <h2 class="text-[14px] font-bold">Community updates</h2>
+      </div>
+      <div class="mt-3 space-y-2.5" id="home-community-list"></div>
+
+    </div>
+    </div>
+  </section>
+
+
+  <!-- ============ REPORT ISSUE SCREEN ============ -->
+  <section class="screen" id="screen-report">
+    <header class="topbar solid flex items-center gap-3">
+      <button class="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--paper)]" onclick="goTo('home')">
+        <i data-lucide="arrow-left" class="w-[18px] h-[18px]"></i>
+      </button>
+      <h1 class="text-[16px] font-extrabold">Report an issue</h1>
+    </header>
+
+  <div class="screen-body" id="report-scroll-body">
+    <div class="px-[16px] pt-3 space-y-2.5">
+
+      <!-- PHOTO SECTION (collapsible) -->
+      <div class="report-section" id="rs-photo">
+        <div class="report-section-header" onclick="toggleSection('rs-photo','sec-photo-done')">
+          <span class="sec-title">
+            <span style="font-size:16px">📸</span>
+            <span>Photo</span>
+            <span class="sec-done-badge hidden" id="sec-photo-done">✓ Added</span>
+          </span>
+          <svg class="sec-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="report-section-body">
+          <div id="photo-drop" class="rounded-[14px] border-2 border-dashed border-[var(--line)] bg-white flex flex-col items-center justify-center py-5 gap-2 cursor-pointer" onclick="document.getElementById('photo-file-input').click()">
+            <input type="file" id="photo-file-input" accept="image/*" class="hidden" onchange="handlePhotoFile(event)"/>
+            <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background:var(--civic-tint)">
+              <i data-lucide="camera" class="w-5 h-5" style="color:var(--civic)"></i>
+            </div>
+            <p class="text-[12.5px] font-bold">Tap to capture or upload</p>
+            <p class="text-[11px] text-[var(--ink-faint)]">JPG, PNG up to 10MB</p>
+          </div>
+          <div id="photo-preview" class="hidden relative rounded-[14px] overflow-hidden h-28">
+            <img id="photo-preview-img" class="w-full h-full object-cover" src="" alt="preview"/>
+            <button onclick="clearPhoto()" class="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-black/55 flex items-center justify-center">
+              <i data-lucide="x" class="w-4 h-4 text-white"></i>
+            </button>
+            <div class="absolute bottom-2.5 left-2.5 pill" style="background:rgba(255,255,255,0.92); color:var(--ink)">
+              <i data-lucide="check" class="w-3 h-3" style="color:var(--green)"></i> Photo attached
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VOICE SECTION (collapsible) -->
+      <div class="report-section collapsed" id="rs-voice">
+        <div class="report-section-header" onclick="toggleSection('rs-voice','sec-voice-done')">
+          <span class="sec-title">
+            <span style="font-size:16px">🎤</span>
+            <span>Voice Report</span>
+            <span class="text-[11px] font-medium" style="color:var(--ink-faint)">(optional)</span>
+            <span class="sec-done-badge hidden" id="sec-voice-done">✓ Recorded</span>
+          </span>
+          <svg class="sec-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="report-section-body">
+          <div class="flex items-center gap-3">
+            <button id="mic-btn" onclick="toggleRecording()" class="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0" style="background:var(--civic); transition:background .25s ease;">
+              <span id="mic-icon-wrap"><i data-lucide="mic" class="w-5 h-5 text-white"></i></span>
+            </button>
+            <div class="flex-1">
+              <p class="text-[13px] font-bold" id="voice-status">🎤 Tap to Speak</p>
+              <p class="text-[11.5px] text-[var(--ink-faint)] mt-0.5" id="voice-sub">Speak in Hindi or English</p>
+            </div>
+            <span class="voice-wave hidden" id="voice-wave">
+              <span></span><span></span><span></span><span></span>
+            </span>
+            <span class="text-[13px] font-mono-num" id="voice-timer" style="color:var(--ink-faint)"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ISSUE DETAILS SECTION (always open) -->
+      <div class="report-section" id="rs-details">
+        <div class="report-section-header" onclick="toggleSection('rs-details',null)">
+          <span class="sec-title">
+            <span style="font-size:16px">📝</span>
+            <span>Issue Details</span>
+          </span>
+          <svg class="sec-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="report-section-body">
+          <label class="text-[12.5px] font-bold">Issue category</label>
+          <div class="grid grid-cols-3 gap-2 mt-2" id="category-grid"></div>
+          <label class="text-[12.5px] font-bold mt-3 block">Description</label>
+          <textarea id="desc-field" class="field-input mt-2" rows="3" placeholder="What's wrong, since when, and how it affects people nearby..."></textarea>
+          <div class="flex items-center justify-between mt-1.5">
+            <button id="ai-analyze-btn" onclick="analyzeWithAI()" class="text-[12px] font-bold flex items-center gap-1.5 px-2.5 py-1.5 rounded-full" style="background:var(--accent-tint); color:var(--accent);">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Analyze with AI
+            </button>
+            <p class="text-[11px] text-[var(--ink-faint)]" id="desc-counter">0/300</p>
+          </div>
+          <!-- AI analysis card -->
+          <div id="ai-analysis-card" class="hidden mt-2">
+            <div class="card p-3.5 shadow-soft" style="border:1px solid var(--accent);">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-7 h-7 rounded-[8px] flex items-center justify-center" style="background:var(--accent-tint)">
+                  <i data-lucide="sparkles" class="w-4 h-4" style="color:var(--accent)"></i>
+                </div>
+                <p class="text-[13px] font-bold">AI Analysis</p>
+              </div>
+              <div id="ai-analysis-loading" class="hidden flex items-center gap-2 py-1">
+                <div class="w-4 h-4 rounded-full border-2" style="border-color:var(--accent-tint); border-top-color:var(--accent); animation:spin .8s linear infinite;"></div>
+                <span class="text-[12px] text-[var(--ink-faint)] font-semibold">Analyzing with Gemini...</span>
+              </div>
+              <div id="ai-analysis-error" class="hidden text-[12px] font-semibold" style="color:var(--red);"></div>
+              <div id="ai-analysis-result" class="hidden space-y-1.5">
+                <p class="text-[12.5px]"><span class="font-bold">Category:</span> <span id="ai-out-category"></span></p>
+                <p class="text-[12.5px]"><span class="font-bold">Priority:</span> <span id="ai-out-priority"></span></p>
+                <p class="text-[12.5px] leading-snug"><span class="font-bold">Summary:</span> <span id="ai-out-summary"></span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOCATION SECTION (collapsible) -->
+      <div class="report-section collapsed" id="rs-location">
+        <div class="report-section-header" onclick="toggleSection('rs-location',null)">
+          <span class="sec-title">
+            <span style="font-size:16px">📍</span>
+            <span>Location</span>
+          </span>
+          <svg class="sec-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="report-section-body">
+          <button class="w-full rounded-[14px] overflow-hidden card shadow-soft text-left" onclick="confirmLocation()">
+            <div class="map-bg relative" style="height:80px">
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center shadow-pop" style="background:var(--civic)">
+                  <i data-lucide="map-pin" class="w-4 h-4 text-white"></i>
+                </div>
+              </div>
+              <div class="absolute top-2 right-2 bg-white rounded-full px-2.5 py-1 text-[10.5px] font-bold shadow-soft flex items-center gap-1">
+                <i data-lucide="locate-fixed" class="w-3 h-3" style="color:var(--civic)"></i> GPS
+              </div>
+            </div>
+            <div class="p-3 flex items-center gap-2">
+              <i data-lucide="map-pin" class="w-4 h-4 flex-shrink-0" style="color:var(--civic)"></i>
+              <div class="flex-1">
+                <p class="text-[13px] font-bold">Vaishali Nagar, Ajmer</p>
+                <p class="text-[11px] text-[var(--ink-faint)]">Auto-detected via GPS · accurate to 8m</p>
+              </div>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-[var(--ink-faint)]"></i>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- AI Priority Badge -->
+      <div id="priority-section" class="hidden">
+        <div class="card p-3.5 shadow-soft flex items-start gap-3" id="priority-card">
+          <div class="w-9 h-9 rounded-[10px] flex items-center justify-center flex-shrink-0" id="priority-icon-wrap">
+            <i data-lucide="zap" class="w-[18px] h-[18px]"></i>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <p class="text-[13px] font-bold">AI Priority</p>
+              <span class="priority-badge" id="priority-badge-text"></span>
+            </div>
+            <p class="text-[11.5px] text-[var(--ink-faint)] mt-1 leading-snug" id="priority-reason">Analyzing category, description and location...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STICKY SUBMIT -->
+  <div class="submit-sticky">
+    <button id="submit-btn" onclick="submitReport()" class="btn-cta w-full py-3.5 text-[14px]" disabled>
+      Submit report
+    </button>
+    <p class="text-center text-[10.5px] text-[var(--ink-faint)] mt-1.5">Shared with Ajmer Municipal Authority</p>
+  </div>
+    </section>
+
+
+  <!-- ============ MY ISSUES SCREEN ============ -->
+  <section class="screen" id="screen-issues">
+    <header class="topbar solid">
+      <h1 class="text-[18px] font-extrabold">My Issues</h1>
+      <p class="text-[11.5px] text-[var(--ink-faint)] mt-0.5 font-medium">👥 People validate civic issues together</p>
+      <div class="flex gap-2 mt-3.5 overflow-x-auto scroll-x pb-1" id="issues-filter-row">
+        <button class="filter-chip px-3.5 py-1.5 rounded-full text-[12.5px] font-bold whitespace-nowrap" data-filter="all">All <span class="opacity-60">17</span></button>
+        <button class="filter-chip px-3.5 py-1.5 rounded-full text-[12.5px] font-bold whitespace-nowrap" data-filter="pending">Pending <span class="opacity-60">2</span></button>
+        <button class="filter-chip px-3.5 py-1.5 rounded-full text-[12.5px] font-bold whitespace-nowrap" data-filter="progress">In Progress <span class="opacity-60">3</span></button>
+        <button class="filter-chip px-3.5 py-1.5 rounded-full text-[12.5px] font-bold whitespace-nowrap" data-filter="resolved">Resolved <span class="opacity-60">12</span></button>
+      </div>
+    </header>
+    <div class="screen-body">
+    <div class="px-[18px] mt-3 space-y-2.5" id="issues-list"></div>
+    </div>
+  </section>
+
+  
+
+
+  <!-- ============ ISSUE DETAIL SCREEN ============ -->
+  <section class="screen" id="screen-detail">
+    <header class="topbar solid flex items-center gap-3">
+      <button class="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--paper)]" onclick="goTo('issues')">
+        <i data-lucide="arrow-left" class="w-[18px] h-[18px]"></i>
+      </button>
+      <h1 class="text-[16px] font-extrabold">Complaint details</h1>
+    </header>
+    <div class="screen-body">
+    <div class="px-[18px] mt-3" id="detail-content"></div>
+    </div>
+  </section>
+
+  
+
+
+  <!-- ============ NEARBY ISSUES SCREEN ============ -->
+  <section class="screen" id="screen-nearby">
+    <header class="topbar solid flex items-center gap-3">
+      <button class="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--paper)]" onclick="goTo('home')">
+        <i data-lucide="arrow-left" class="w-[18px] h-[18px]"></i>
+      </button>
+      <h1 class="text-[16px] font-extrabold">Nearby issues</h1>
+    </header>
+    <div class="screen-body">
+    <div class="map-bg h-48 relative">
+      <div id="nearby-pins"></div>
+      <div class="absolute bottom-3 right-3 bg-white rounded-full px-3 py-1.5 text-[11px] font-bold shadow-pop flex items-center gap-1.5">
+        <i data-lucide="locate-fixed" class="w-3.5 h-3.5" style="color:var(--civic)"></i> Your location
+      </div>
+    </div>
+    <div class="px-[18px] mt-4 space-y-2.5" id="nearby-list"></div>
+    </div>
+  </section>
+
+  
+
+
+  <!-- ============ ALERTS SCREEN ============ -->
+  <section class="screen" id="screen-alerts">
+    <header class="topbar solid">
+      <h1 class="text-[18px] font-extrabold">Alerts</h1>
+      <p class="text-[12.5px] text-[var(--ink-faint)] mt-0.5">Updates on your complaints & your area</p>
+    </header>
+    <div class="screen-body">
+    <div class="px-[18px] mt-3 space-y-3" id="alerts-list"></div>
+    </div>
+  </section>
+
+  
+
+
+  <!-- ============ PROFILE SCREEN ============ -->
+  <section class="screen" id="screen-profile">
+    <header class="topbar solid">
+      <h1 class="text-[18px] font-extrabold">Profile</h1>
+    </header>
+    <div class="screen-body">
+    <div class="px-[18px] mt-3">
+      <div class="card p-4 flex items-center gap-3.5 shadow-soft">
+        <div class="w-14 h-14 rounded-full border border-[var(--line)] flex items-center justify-center flex-shrink-0" style="background:var(--civic-tint)">
+          <span class="text-[20px] font-extrabold" style="color:var(--civic)">H</span>
+        </div>
+        <div class="flex-1">
+          <p class="text-[15.5px] font-extrabold">Harish Kumar</p>
+          <p class="text-[12px] text-[var(--ink-faint)]">+91 98XXX XX211 · Ajmer</p>
+          <div class="flex items-center gap-1 mt-1">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5" style="color:var(--civic)"></i>
+            <span class="text-[11px] font-bold" style="color:var(--civic)">Verified citizen</span>
+          </div>
+        </div>
+        <button class="w-8 h-8 rounded-full bg-[var(--paper)] flex items-center justify-center">
+          <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2.5 mt-3.5">
+        <div class="card p-3 text-center shadow-soft">
+          <p class="text-[17px] font-mono-num">17</p>
+          <p class="text-[10.5px] text-[var(--ink-faint)] font-semibold mt-0.5">Reported</p>
+        </div>
+        <div class="card p-3 text-center shadow-soft">
+          <p class="text-[17px] font-mono-num">12</p>
+          <p class="text-[10.5px] text-[var(--ink-faint)] font-semibold mt-0.5">Resolved</p>
+        </div>
+        <div class="card p-3 text-center shadow-soft">
+          <p class="text-[17px] font-mono-num">240</p>
+          <p class="text-[10.5px] text-[var(--ink-faint)] font-semibold mt-0.5">Civic pts</p>
+        </div>
+      </div>
+
+      <p class="text-[12px] font-bold text-[var(--ink-faint)] uppercase tracking-wide mt-6 mb-2 px-1">Preferences</p>
+      <div class="card shadow-soft divide-y divide-[var(--line)]">
+        <div class="flex items-center gap-3 p-4">
+          <i data-lucide="languages" class="w-[18px] h-[18px]" style="color:var(--civic)"></i>
+          <span class="flex-1 text-[13.5px] font-semibold">Language</span>
+          <button class="flex items-center gap-1 text-[12.5px] font-bold text-[var(--ink-faint)]" onclick="cycleLanguage()">
+            <span id="lang-value">English</span>
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <div class="flex items-center gap-3 p-4">
+          <i data-lucide="moon" class="w-[18px] h-[18px]" style="color:var(--civic)"></i>
+          <span class="flex-1 text-[13.5px] font-semibold">Dark mode</span>
+          <button class="switch" id="dark-switch" onclick="toggleSwitch(this)"><div class="switch-knob"></div></button>
+        </div>
+        <div class="flex items-center gap-3 p-4">
+          <i data-lucide="bell-ring" class="w-[18px] h-[18px]" style="color:var(--civic)"></i>
+          <span class="flex-1 text-[13.5px] font-semibold">Notifications</span>
+          <button class="switch on" id="notif-switch" onclick="toggleSwitch(this)"><div class="switch-knob"></div></button>
+        </div>
+        <div class="flex items-center gap-3 p-4">
+          <i data-lucide="map-pin" class="w-[18px] h-[18px]" style="color:var(--civic)"></i>
+          <span class="flex-1 text-[13.5px] font-semibold">Location access</span>
+          <button class="switch on" id="loc-switch" onclick="toggleSwitch(this)"><div class="switch-knob"></div></button>
+        </div>
+      </div>
+
+      <p class="text-[12px] font-bold text-[var(--ink-faint)] uppercase tracking-wide mt-6 mb-2 px-1">Support</p>
+      <div class="card shadow-soft divide-y divide-[var(--line)]">
+        <button class="w-full flex items-center gap-3 p-4 text-left">
+          <i data-lucide="help-circle" class="w-[18px] h-[18px]" style="color:var(--civic)"></i>
+          <span class="flex-1 text-[13.5px] font-semibold">Help & support</span>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-[var(--ink-faint)]"></i>
+        </button>
+        <button class="w-full flex items-center gap-3 p-4 text-left" onclick="window.open('admin.html','_blank')">
+          <i data-lucide="layout-dashboard" class="w-[18px] h-[18px]" style="color:var(--civic)"></i>
+          <span class="flex-1 text-[13.5px] font-semibold">Admin Dashboard</span>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-[var(--ink-faint)]"></i>
+        </button>
+        <button class="w-full flex items-center gap-3 p-4 text-left" onclick="openAbout()">
+          <i data-lucide="info" class="w-[18px] h-[18px]" style="color:var(--civic)"></i>
+          <span class="flex-1 text-[13.5px] font-semibold">About CivicAI</span>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-[var(--ink-faint)]"></i>
+        </button>
+        <button class="w-full flex items-center gap-3 p-4 text-left">
+          <i data-lucide="file-text" class="w-[18px] h-[18px]" style="color:var(--civic)"></i>
+          <span class="flex-1 text-[13.5px] font-semibold">Terms & privacy</span>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-[var(--ink-faint)]"></i>
+        </button>
+      </div>
+
+      <button class="w-full flex items-center justify-center gap-2 p-4 mt-5 text-[13.5px] font-bold" style="color:var(--red)">
+        <i data-lucide="log-out" class="w-[16px] h-[16px]"></i> Log out
+      </button>
+      <p class="text-center text-[11px] text-[var(--ink-faint)] mt-1 mb-4">CivicAI v2.4.1</p>
+    </div>
+    </div>
+  
+  </section>
+
+  <!-- About modal -->
+  <div id="about-sheet" class="hidden fixed inset-0 z-50">
+    <div class="absolute inset-0 bg-black/40" onclick="closeAbout()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[24px] p-6 max-h-[80vh] overflow-y-auto" style="max-width:430px; margin:0 auto;">
+      <div class="w-10 h-1 bg-[var(--line)] rounded-full mx-auto mb-5"></div>
+      <div class="w-14 h-14 rounded-[16px] flex items-center justify-center mb-3" style="background:var(--civic)">
+        <i data-lucide="landmark" class="w-7 h-7 text-white"></i>
+      </div>
+      <h2 class="text-[19px] font-extrabold">CivicAI Citizen App</h2>
+      <p class="text-[13px] text-[var(--ink-faint)] mt-1">Report civic issues in seconds.</p>
+      <p class="text-[13px] mt-4 leading-relaxed">CivicAI connects citizens directly to municipal authorities. Photo, voice or text — every report is auto-categorised and prioritised so urgent problems reach the right department faster.</p>
+      <div class="mt-4 space-y-2.5">
+        <div class="flex items-center gap-2.5 text-[12.5px]"><i data-lucide="check" class="w-4 h-4" style="color:var(--civic)"></i> Version 2.4.1</div>
+        <div class="flex items-center gap-2.5 text-[12.5px]"><i data-lucide="check" class="w-4 h-4" style="color:var(--civic)"></i> Integrated with Ajmer Municipal Corporation</div>
+        <div class="flex items-center gap-2.5 text-[12.5px]"><i data-lucide="check" class="w-4 h-4" style="color:var(--civic)"></i> Built for Smart India Hackathon</div>
+      </div>
+      <button class="btn-primary w-full py-3.5 mt-6" onclick="closeAbout()">Close</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="card shadow-pop p-3.5 flex items-center gap-3">
+    <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" id="toast-icon-wrap" style="background:var(--green-tint)">
+      <i data-lucide="check" class="w-4 h-4" id="toast-icon" style="color:var(--green)"></i>
+    </div>
+    <div class="flex-1">
+      <p class="text-[13px] font-bold" id="toast-title">Submitted</p>
+      <p class="text-[11.5px] text-[var(--ink-faint)]" id="toast-sub">We'll keep you posted</p>
+    </div>
+  </div>
+
+  <!-- ============ BOTTOM NAV ============ -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-nav="home" onclick="goTo('home')">
+      <i data-lucide="home" class="w-[21px] h-[21px]"></i>
+      <span class="nav-label">Home</span>
+    </button>
+    <div class="nav-fab-wrap">
+      <button class="nav-fab" onclick="goTo('report')">
+        <i data-lucide="plus" class="w-6 h-6"></i>
+      </button>
+    </div>
+    <button class="nav-item" data-nav="issues" onclick="goTo('issues')">
+      <i data-lucide="clipboard-list" class="w-[21px] h-[21px]"></i>
+      <span class="nav-label">My Issues</span>
+    </button>
+    <button class="nav-item has-alert" data-nav="alerts" onclick="goTo('alerts')">
+      <span class="nav-dot"></span>
+      <i data-lucide="bell" class="w-[21px] h-[21px]"></i>
+      <span class="nav-label">Alerts</span>
+    </button>
+    <button class="nav-item" data-nav="profile" onclick="goTo('profile')">
+      <i data-lucide="user" class="w-[21px] h-[21px]"></i>
+      <span class="nav-label">Profile</span>
+    </button>
+  </nav>
+
+</div>
+
+<script type="module" src="firebase-config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
