@@ -178,6 +178,11 @@
 
   #sidebar{ transition:transform .25s ease; }
   #sidebarOverlay{ transition:opacity .25s ease; }
+  @media (max-width: 1023px) {
+    #sidebar { transform: translateX(-100%) !important; }
+    #sidebar.open { transform: translateX(0) !important; }
+    main, header { margin-left: 0 !important; left: 0 !important; }
+  }
 
   .toast{ animation:toastIn .25s ease, toastOut .25s ease 2.6s forwards; }
   @keyframes toastIn{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:translateY(0);} }
@@ -189,8 +194,8 @@
 <body data-theme="dark" class="antialiased">
 
 <!-- ============ SIDEBAR ============ -->
-<aside id="sidebar" class="fixed top-0 left-0 h-screen w-64 z-50 flex flex-col -translate-x-full lg:translate-x-0"
-       style="background:var(--surface); border-right:1px solid var(--border);">
+<aside id="sidebar" class="fixed top-0 left-0 h-screen w-64 z-50 flex flex-col"
+       style="background:var(--surface); border-right:1px solid var(--border); transform:translateX(0);">
   <div class="flex items-center gap-2.5 px-5 h-16 flex-shrink-0" style="border-bottom:1px solid var(--border);">
     <div class="relative w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background:var(--primary-dim);">
       <span class="pulse-dot block w-2.5 h-2.5 rounded-full" style="background:var(--primary); color:var(--primary);"></span>
@@ -258,8 +263,8 @@
 <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
 
 <!-- ============ TOPBAR ============ -->
-<header class="fixed top-0 left-0 right-0 lg:left-64 h-16 z-30 flex items-center gap-3 px-4 sm:px-6"
-        style="background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(10px); border-bottom:1px solid var(--border);">
+<header class="fixed top-0 right-0 h-16 z-30 flex items-center gap-3 px-4 sm:px-6" style="left:256px;"
+        style="background:var(--surface); backdrop-filter:blur(10px); border-bottom:1px solid var(--border);">
   <button onclick="toggleSidebar()" class="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim);">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
   </button>
@@ -289,7 +294,7 @@
 </header>
 
 <!-- ============ MAIN ============ -->
-<main class="lg:ml-64 pt-16 min-h-screen">
+<main style="margin-left:256px;" class="pt-16 min-h-screen">
 <div class="p-4 sm:p-6 lg:p-8 max-w-[1500px] mx-auto">
 
   <!-- ===================== DASHBOARD VIEW ===================== -->
@@ -1313,10 +1318,10 @@ function switchView(view, navEl){
 function toggleSidebar(){
   const sb = document.getElementById('sidebar');
   const ov = document.getElementById('sidebarOverlay');
-  const isOpen = sb.classList.contains('translate-x-0');
+  const isOpen = sb.classList.contains('open');
   if(isOpen){ closeSidebarMobile(); }
   else{
-    sb.classList.add('translate-x-0'); sb.classList.remove('-translate-x-full');
+    sb.classList.add('open');
     ov.classList.remove('hidden');
   }
   setTimeout(()=> Object.values(mapInstances).forEach(m=>m.invalidateSize()), 260);
@@ -1324,7 +1329,7 @@ function toggleSidebar(){
 function closeSidebarMobile(){
   const sb = document.getElementById('sidebar');
   const ov = document.getElementById('sidebarOverlay');
-  sb.classList.remove('translate-x-0'); sb.classList.add('-translate-x-full');
+  sb.classList.remove('open');
   ov.classList.add('hidden');
 }
 function toggleTheme(isDark){
