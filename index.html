@@ -711,8 +711,58 @@ html, body {
 }
 
 @media (min-width: 431px) {
-  body { padding: 0; background: var(--paper); display: flex; align-items: flex-start; justify-content: center; min-height: 100vh; }
-  .device { height: 100vh; width: 430px; border-radius: 0; box-shadow: none; }
+  html, body { height: 100%; overflow: hidden; background: #0D0F14; }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px;
+  }
+  /* iPhone outer shell */
+  .iphone-shell {
+    position: relative;
+    width: 393px; height: 852px;
+    background: #1A1A1E;
+    border-radius: 54px;
+    box-shadow: 0 0 0 1.5px #3A3A3C, 0 0 0 3px #2C2C2E, 0 40px 80px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.07);
+    flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: center;
+    overflow: hidden;
+  }
+  /* Dynamic Island */
+  .iphone-dynamic-island {
+    position: absolute; top: 13px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 34px; background: #0D0F14;
+    border-radius: 20px; z-index: 200;
+  }
+  /* Status bar */
+  .iphone-statusbar {
+    position: absolute; top: 0; left: 0; right: 0; height: 52px;
+    z-index: 150; display: flex; align-items: flex-end;
+    padding: 0 28px 8px; justify-content: space-between;
+    pointer-events: none;
+  }
+  .iphone-statusbar .sb-time {
+    font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
+    color: white; letter-spacing: -0.3px;
+  }
+  .iphone-statusbar .sb-icons { display: flex; align-items: center; gap: 6px; }
+  /* Side buttons */
+  .btn-side-vol-up {
+    position: absolute; left: -3px; top: 160px;
+    width: 4px; height: 36px; background: #3A3A3C; border-radius: 2px 0 0 2px;
+  }
+  .btn-side-vol-down {
+    position: absolute; left: -3px; top: 208px;
+    width: 4px; height: 36px; background: #3A3A3C; border-radius: 2px 0 0 2px;
+  }
+  .btn-side-power {
+    position: absolute; right: -3px; top: 185px;
+    width: 4px; height: 64px; background: #3A3A3C; border-radius: 0 2px 2px 0;
+  }
+  /* Screen inside phone */
+  .iphone-shell .device {
+    width: 393px; height: 852px;
+    border-radius: 54px; overflow: hidden; position: relative;
+  }
 }
 
 /* ── SCREEN: each screen is a flex column, scrollable content ── */
@@ -930,6 +980,22 @@ html, body {
 </head>
 <body>
 
+<div class="iphone-shell" id="iphoneShell">
+  <!-- Dynamic Island -->
+  <div class="iphone-dynamic-island"></div>
+  <!-- Status Bar -->
+  <div class="iphone-statusbar">
+    <span class="sb-time" id="sb-clock">9:41</span>
+    <span class="sb-icons">
+      <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1" fill="white" opacity="0.4"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="white" opacity="0.6"/><rect x="9" y="0" width="3" height="12" rx="1" fill="white" opacity="0.8"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" fill="white"/></svg>
+      <svg width="15" height="12" viewBox="0 0 15 12"><path d="M7.5 2C10.5 2 13.2 3.3 15 5.5L13.5 7C12.1 5.2 9.9 4 7.5 4S2.9 5.2 1.5 7L0 5.5C1.8 3.3 4.5 2 7.5 2z" fill="white" opacity="0.4"/><path d="M7.5 5C9.5 5 11.3 5.9 12.5 7.3L11 8.8C10.2 7.7 8.9 7 7.5 7S4.8 7.7 4 8.8L2.5 7.3C3.7 5.9 5.5 5 7.5 5z" fill="white" opacity="0.7"/><path d="M7.5 8C8.6 8 9.5 8.5 10.2 9.2L7.5 12L4.8 9.2C5.5 8.5 6.4 8 7.5 8z" fill="white"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0" y="1" width="22" height="10" rx="2.5" stroke="white" stroke-width="1" fill="none" opacity="0.5"/><rect x="1.5" y="2.5" width="17" height="7" rx="1.5" fill="white"/><rect x="23" y="4" width="2" height="4" rx="1" fill="white" opacity="0.5"/></svg>
+    </span>
+  </div>
+  <!-- Side buttons -->
+  <div class="btn-side-vol-up"></div>
+  <div class="btn-side-vol-down"></div>
+  <div class="btn-side-power"></div>
 <div class="device" id="device">
 
   <!-- ============ HOME SCREEN ============ -->
@@ -1451,8 +1517,41 @@ html, body {
   </nav>
 
 </div>
+</div><!-- /iphone-shell -->
 
 <script type="module" src="firebase-config.js"></script>
 <script src="app.js"></script>
+
+<script>
+// iPhone status bar clock
+function updateClock(){
+  const now = new Date();
+  let h = now.getHours(), m = now.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  const el = document.getElementById('sb-clock');
+  if(el) el.textContent = h + ':' + String(m).padStart(2,'0');
+}
+updateClock();
+setInterval(updateClock, 10000);
+// Hide iphone shell on mobile
+function checkShell(){
+  const shell = document.getElementById('iphoneShell');
+  if(!shell) return;
+  if(window.innerWidth <= 430){
+    shell.style.borderRadius = '0';
+    shell.style.boxShadow = 'none';
+    shell.style.height = '100vh';
+    shell.style.width = '100%';
+    document.querySelector('.iphone-dynamic-island').style.display='none';
+    document.querySelector('.iphone-statusbar').style.display='none';
+    document.querySelector('.btn-side-vol-up').style.display='none';
+    document.querySelector('.btn-side-vol-down').style.display='none';
+    document.querySelector('.btn-side-power').style.display='none';
+  }
+}
+checkShell();
+window.addEventListener('resize', checkShell);
+</script>
 </body>
 </html>
