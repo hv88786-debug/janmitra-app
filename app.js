@@ -931,7 +931,7 @@ function checkSubmitReady(){
 // AI ANALYSIS — Gemini 2.5 Flash
 // ============================================================
 // >>> Replace with your own Gemini API key (https://aistudio.google.com/apikey) <<<
-const GEMINI_API_KEY = "AQ.Ab8RN6KIp5uBBiY6daD78nZLitZnIIkhxLuEfWrGHedNN3ySXg";
+const GEMINI_API_KEY = "AQ.Ab8RN6IgQSbpmYLb-JWu9M2Isip3kqMlVtru33LZpnG_QU5qcA";
 const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
